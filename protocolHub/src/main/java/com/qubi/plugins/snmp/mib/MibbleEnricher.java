@@ -3,6 +3,7 @@ package com.qubi.plugins.snmp.mib;
 import net.percederberg.mibble.Mib;
 import net.percederberg.mibble.MibLoader;
 import net.percederberg.mibble.MibSymbol;
+import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 import java.io.File;
@@ -42,10 +43,9 @@ public class MibbleEnricher implements MibEnricher {
       String oidStr = e.getKey();
       Object val = e.getValue();
       try {
-        ObjectIdentifierValue oid = new ObjectIdentifierValue(oidStr,-1);
-        MibSymbol sym = resolve(oid);
+        MibSymbol sym = findSymbolByOidString(oidStr);
         if (sym != null) {
-          String fq = sym.getName() + "::" + sym.getName();
+          String fq = sym.getMib().getName() + "::" + sym.getName();
           out.put(fq, val);                      // alias legible
           out.put("mib.name." + oidStr, fq);     // mapping OID -> nombre
         }
@@ -56,12 +56,23 @@ public class MibbleEnricher implements MibEnricher {
     return out;
   }
 
-  private MibSymbol resolve(ObjectIdentifierValue oid) {
-    for (Mib m : loaded) {
-      try {
-        MibSymbol s = m.getSymbolByValue(oid);
-        if (s != null) return s;
-      } catch (Exception ignored) {}
+  private MibSymbol findSymbolByOidString(String oidStr) {
+    if (oidStr == null || oidStr.trim().isEmpty()) {
+      return null;
+    }
+    
+    for (Mib mib : loaded) {
+      Collection<MibSymbol> symbols = mib.getAllSymbols();
+      for (MibSymbol symbol : symbols) {
+        if (symbol instanceof MibValueSymbol valueSymbol) {
+          if (valueSymbol.getValue() instanceof ObjectIdentifierValue oidValue) {
+            String symbolOidStr = oidValue.toString();
+            if (oidStr.equals(symbolOidStr)) {
+              return symbol;
+            }
+          }
+        }
+      }
     }
     return null;
   }
