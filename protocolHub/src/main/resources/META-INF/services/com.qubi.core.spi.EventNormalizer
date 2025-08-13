@@ -1,0 +1,2 @@
+com.qubi.plugins.syslog.SyslogEventNormalizer
+com.qubi.plugins.snmp.SnmpTrapNormalizer

@@ -1,0 +1,22 @@
+# Regla para SYSLOG: extrae device, app y cpu%
+- match:
+    protocol: SYSLOG
+    body_regex: '(?i)host=(?<dev>[\w\-.]+).*app=(?<app>[\w\-.]+).*CPU[=:]\s*(?<pct>\d{1,3})%'
+  set:
+    tags:
+      device: '${captures.dev}'
+      app:    '${captures.app}'
+    attributes:
+      cpu_pct: '${captures.pct}'
+    severity: 'WARN'
+
+# Regla para SNMP: linkDown por trap OID; saca ifIndex e ifName si están en los varbinds
+- match:
+    protocol: SNMP_TRAP
+    trap_oid: '1.3.6.1.6.3.1.1.5.3'   # linkDown
+  set:
+    tags:
+      device: '${source.ip}'
+      ifIndex: '${attributes.1.3.6.1.2.1.2.2.1.1}'   # ifIndex
+      ifName:  '${attributes.ifName}'                # si existe por lookup previo
+    severity: 'ERROR'

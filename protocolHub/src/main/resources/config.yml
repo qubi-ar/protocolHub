@@ -1,0 +1,14 @@
+drivers:
+  - pluginId: "line-udp"
+    port: 5515
+  - pluginId: "snmp4j-trap"
+    port: 9162
+
+snmp:
+  mibsDir: "/usr/share/snmp/mibs"
+  modules:
+    - "SNMPv2-SMI"
+    - "SNMPv2-TC"
+    - "SNMPv2-MIB"
+    - "NET-SNMP-MIB"
+    - "NET-SNMP-EXAMPLES-MIB"
