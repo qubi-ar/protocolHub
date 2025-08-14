@@ -3,7 +3,10 @@ package com.qubi.core.normalize;
 import java.util.List;
 import java.util.Map;
 
-public record RuleConfig(List<Rule> rules) {
+public record RuleConfig(List<Rule> rules, String trap_oid_key) {
+
+
+
     public record Rule(
         Match match,
         SetOp set

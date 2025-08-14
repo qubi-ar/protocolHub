@@ -1,10 +1,13 @@
-# Regla para SNMP: linkDown por trap OID; saca ifIndex e ifName si están en los varbinds
-- match:
-    protocol: SNMP_TRAP
-    trap_oid: '1.3.6.1.6.3.1.1.5.3'   # linkDown
-  set:
-    tags:
-      device: '${source.ip}'
-      ifIndex: '${attributes.1.3.6.1.2.1.2.2.1.1}'   # ifIndex
-      ifName:  '${attributes.ifName}'                # si existe por lookup previo
+trap_oid_key: "snmpTrapOID"
+
+rules:
+  # Regla para SNMP: linkDown por trap OID; saca ifIndex e ifName si están en los varbinds
+  - match:
+      protocol: SNMP_TRAP
+      trap_oid: '1.3.6.1.6.3.1.1.5.3'   # linkDown
+    set:
+      tags:
+        device: '${source.ip}'
+        ifIndex: '${attributes.1.3.6.1.2.1.2.2.1.1}'   # ifIndex
+        ifName:  '${attributes.ifName}'                # si existe por lookup previo
       severity: 'ERROR'

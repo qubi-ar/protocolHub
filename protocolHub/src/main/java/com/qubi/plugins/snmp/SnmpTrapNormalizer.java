@@ -10,15 +10,23 @@ import java.util.LinkedHashMap;
 import java.util.regex.Pattern;
 
 public class SnmpTrapNormalizer implements EventNormalizer {
-  private static final String TRAP_OID_KEY = "snmp.varbinds.1.3.6.1.6.3.1.1.4.1.0";
+  private static final String DEFAULT_TRAP_OID_KEY = "snmpTrapOID";
   private final List<RuleConfig.Rule> rules;
+  private final String trapOidKey;
 
   public SnmpTrapNormalizer() {
     this.rules = List.of();
+    this.trapOidKey = DEFAULT_TRAP_OID_KEY;
   }
 
   public SnmpTrapNormalizer(List<RuleConfig.Rule> rules) {
     this.rules = rules;
+    this.trapOidKey = DEFAULT_TRAP_OID_KEY;
+  }
+
+  public SnmpTrapNormalizer(List<RuleConfig.Rule> rules, String trapOidKey) {
+    this.rules = rules;
+    this.trapOidKey = trapOidKey != null ? trapOidKey : DEFAULT_TRAP_OID_KEY;
   }
 
   @Override public boolean supports(NormalizedEvent e) {
@@ -26,7 +34,7 @@ public class SnmpTrapNormalizer implements EventNormalizer {
   }
 
   @Override public NormalizedEvent normalize(NormalizedEvent e) {
-    Object trapOid = e.attributes().get(TRAP_OID_KEY);
+    Object trapOid = e.attributes().get(trapOidKey);
     String trapOidStr = String.valueOf(trapOid);
     
     for (RuleConfig.Rule rule : rules) {
