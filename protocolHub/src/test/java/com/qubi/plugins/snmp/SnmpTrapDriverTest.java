@@ -21,21 +21,17 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SnmpTrapDriverIT {
+class SnmpTrapDriverTest {
 
     private SnmpTrapDriver driver;
     private BlockingQueue<NormalizedEvent> queue;
 
-    private int portV2;
-    private int portV3a;
-    private int portV3b;
+    private int testPort;
 
     @BeforeEach
     void setUp() throws Exception {
         queue = new ArrayBlockingQueue<>(8);
-        portV2  = findFreeUdpPort();
-        portV3a = findFreeUdpPort();
-        portV3b = findFreeUdpPort();
+        testPort = findFreeUdpPort();
     }
 
     @AfterEach
@@ -49,18 +45,18 @@ class SnmpTrapDriverIT {
 
     @Test
     void receivesTrap_v2c() throws Exception {
-        driver = new SnmpTrapDriver(portV2, "snmp4j-trap-v2");
+        driver = new SnmpTrapDriver(testPort, "snmp4j-trap");
         driver.setListener(queue::offer);
         driver.start();
         Thread.sleep(150); // pequeña espera para que escuche
 
-        sendTrapV2("127.0.0.1", portV2);
+        sendTrapV2("127.0.0.1", testPort);
 
         NormalizedEvent evt = queue.poll(3, TimeUnit.SECONDS);
         assertNotNull(evt, "No llegó el trap v2c");
         assertEquals(Protocol.SNMP_TRAP, evt.protocol());
         assertEquals(EventKind.TRAP, evt.kind());
-        assertEquals("snmp4j-trap-v2", evt.pluginId());
+        assertEquals("snmp4j-trap", evt.pluginId());
         assertEquals(Transport.UDP, evt.source().transport());
         assertTrue(evt.attributes().containsKey("snmpTrapOID"), "Falta snmpTrapOID");
 
@@ -75,18 +71,18 @@ class SnmpTrapDriverIT {
     void receivesTrap_v3_authNoPriv_SHA() throws Exception {
         SnmpTrapDriver.SnmpV3User user = SnmpTrapDriver.SnmpV3User.withSHA1Auth("testuser", "testpassword");
 
-        driver = new SnmpTrapDriver(portV3a, "snmp4j-trap-v3-auth", List.of(user));
+        driver = new SnmpTrapDriver(testPort, "snmp4j-trap", List.of(user));
         driver.setListener(queue::offer);
         driver.start();
         Thread.sleep(150);
 
-        sendTrapV3_authNoPriv_SHA("127.0.0.1", portV3a, "testuser", "testpassword");
+        sendTrapV3_authNoPriv_SHA("127.0.0.1", testPort, "testuser", "testpassword");
 
         NormalizedEvent evt = queue.poll(3, TimeUnit.SECONDS);
         assertNotNull(evt, "No llegó el trap v3 authNoPriv (SHA)");
         assertEquals(Protocol.SNMP_TRAP, evt.protocol());
         assertEquals(EventKind.TRAP, evt.kind());
-        assertEquals("snmp4j-trap-v3-auth", evt.pluginId());
+        assertEquals("snmp4j-trap", evt.pluginId());
         assertTrue(evt.attributes().containsKey("snmpTrapOID"));
     }
 
@@ -97,18 +93,18 @@ class SnmpTrapDriverIT {
         SnmpTrapDriver.SnmpV3User user = new SnmpTrapDriver.SnmpV3User(
                 "secureuser", AuthSHA.ID, "authpass123", PrivAES128.ID, "privpass123");
 
-        driver = new SnmpTrapDriver(portV3b, "snmp4j-trap-v3-authpriv", List.of(user));
+        driver = new SnmpTrapDriver(testPort, "snmp4j-trap", List.of(user));
         driver.setListener(queue::offer);
         driver.start();
         Thread.sleep(150);
 
-        sendTrapV3_authPriv_SHA_AES("127.0.0.1", portV3b, "secureuser", "authpass123", "privpass123");
+        sendTrapV3_authPriv_SHA_AES("127.0.0.1", testPort, "secureuser", "authpass123", "privpass123");
 
         NormalizedEvent evt = queue.poll(3, TimeUnit.SECONDS);
         assertNotNull(evt, "No llegó el trap v3 authPriv (SHA+AES128)");
         assertEquals(Protocol.SNMP_TRAP, evt.protocol());
         assertEquals(EventKind.TRAP, evt.kind());
-        assertEquals("snmp4j-trap-v3-authpriv", evt.pluginId());
+        assertEquals("snmp4j-trap", evt.pluginId());
         assertTrue(evt.attributes().containsKey("snmpTrapOID"));
     }
 

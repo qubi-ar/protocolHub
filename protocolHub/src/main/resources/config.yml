@@ -1,10 +1,14 @@
 drivers:
-  - pluginId: "line-udp"
-    port: 5515
   - pluginId: "snmp4j-trap"
     port: 9162
-
+    queueCapacity: 200000
+    workerThreads: 8
+    overflowPolicy: BLOCK        # o DROP_NEWEST
+    offerTimeoutMs: 2
+    udpReceiveBufferBytes: 134217728
+    maxInboundMessageSize: 65535
 snmp:
+
   mibsDir: "/usr/share/snmp/mibs"
   modules:
     - "SNMPv2-SMI"
@@ -12,3 +16,19 @@ snmp:
     - "SNMPv2-MIB"
     - "NET-SNMP-MIB"
     - "NET-SNMP-EXAMPLES-MIB"
+  trap:
+    port: 9162  # Same port as driver - SNMP4J auto-detects v2c/v3
+    pluginId: "snmp4j-trap"
+    v3:
+      enabled: true
+      users:
+        - username: "myuser"
+          authProtocol: "SHA"       # NONE|MD5|SHA|SHA256|SHA384|SHA512 (según soporte de tu SNMP4J)
+          authPassphrase: "authpass"
+          privProtocol: "AES"    # NONE|DES|AES|AES128|AES192|AES256 (según soporte)
+          privPassphrase: "privpass"
+        - username: "legacy"
+          authProtocol: "MD5"
+          authPassphrase: "md5secret"
+          privProtocol: "DES"
+          privPassphrase: "dessecret"
